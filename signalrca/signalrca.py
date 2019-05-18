@@ -126,8 +126,8 @@ class SignalRAsyncClient:
             logger.exception('Caught exception')
             logger.error('exception occurred in the loop: %s, with details: %s', self.ws_loop,
                          error)
-            self.ws_loop.stop()
             self.exception.trigger_hooks(error)
+            self.ws_loop.stop()
 
 
 class EventHook:
