@@ -10,18 +10,16 @@ async def process_message(message):
     return json.loads(deflated_msg.decode())
 
 
-async def on_debug(**msg):
+async def on_debug(msg):
     if 'R' in msg and type(msg['R']) is not bool:
         decoded_msg = await process_message(msg['R'])
         print(decoded_msg)
 
 
-# Create error handler
-async def on_error(*msg):
+async def on_error(msg):
     print(msg)
 
 
-# Create hub message handler
 async def on_message(msg):
     decoded_msg = await process_message(msg)
     print(decoded_msg)

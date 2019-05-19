@@ -26,19 +26,18 @@ class SignalRAsyncClient:
         self.ws_loop = None
         self._set_loop_and_queue()
 
-    async def handle_hub_message(self, **kwargs):
-        messages = kwargs['M'] if 'M' in kwargs and len(kwargs['M']) > 0 else {}
+    async def handle_hub_message(self, data):
+        messages = data['M'] if 'M' in data and len(data['M']) > 0 else {}
         for inner_data in messages:
             method = inner_data['M']
             if method in self._hub_handlers:
                 arguments = inner_data['A']
                 await self._hub_handlers[method].async_trigger_hooks(*arguments)
 
-    async def handle_error(self, **data):
+    async def handle_error(self, data):
         if 'E' in data:
-            invoke_index = int(data.get('I', -1))
-            await self.error.async_trigger_hooks({'error': data['E'],
-                                            'call_arguments': self.invokes_data.get(invoke_index)})
+            invoke_data = self.invokes_data.get(int(data.get('I', -1)))
+            await self.error.async_trigger_hooks({'error': data['E'], 'invoke_data': invoke_data})
 
     def start(self):
         self._ws_params = WebSocketParameters(self.url, self.hub_name)
@@ -80,8 +79,10 @@ class SignalRAsyncClient:
             await self._master_handler(self.ws)
 
     async def _master_handler(self, ws):
-        consumer_task = asyncio.ensure_future(self.handle_exception(self._consumer_handler(ws)), loop=self.ws_loop)
-        producer_task = asyncio.ensure_future(self.handle_exception(self._producer_handler(ws)), loop=self.ws_loop)
+        consumer_task = asyncio.ensure_future(self.handle_exception(self._consumer_handler(ws)),
+                                              loop=self.ws_loop)
+        producer_task = asyncio.ensure_future(self.handle_exception(self._producer_handler(ws)),
+                                              loop=self.ws_loop)
         done, pending = await asyncio.wait([consumer_task, producer_task],
                                            loop=self.ws_loop, return_when=asyncio.FIRST_EXCEPTION)
 
@@ -93,7 +94,7 @@ class SignalRAsyncClient:
             message = await ws.recv()
             if len(message) > 0:
                 data = json.loads(message)
-                await self.received.async_trigger_hooks(**data)
+                await self.received.async_trigger_hooks(data)
 
     async def _producer_handler(self, ws):
         while True:
@@ -145,5 +146,3 @@ class EventHook:
     def trigger_hooks(self, *args, **kwargs):
         for handler in self._handlers:
             handler(*args, **kwargs)
-
-
