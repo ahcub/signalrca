@@ -4,7 +4,7 @@
 
 ## Install using pip
 ```
-pip install signalrc
+pip install signalrca
 ```
 
 #### Usage
