@@ -1,4 +1,4 @@
-# Python SignalR client
+# Python Async SignalR client
 
 *Note: Library is currently not compatible with ASP.NET Core SignalR (.NET Core 2.1), due to changes in SignalR protocol there*
 
